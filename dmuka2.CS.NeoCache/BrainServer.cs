@@ -243,7 +243,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var typeStr = type.ToStringDC();
-                                Brain.AddANeuron(keyStr, typeStr);
+
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.AddANeuron(keyStr, typeStr);
+                                }
                             }
                             break;
                         case BrainPackageType.RemoveANeuron:
@@ -258,7 +262,11 @@ namespace dmuka2.CS.NeoCache
                                 ReadBuffer(tcpClient, stream, key);
 
                                 var keyStr = key.ToStringDC();
-                                Brain.RemoveANeuron(keyStr);
+
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.RemoveANeuron(keyStr);
+                                }
                             }
                             break;
                         case BrainPackageType.RefreshANeuron:
@@ -284,7 +292,10 @@ namespace dmuka2.CS.NeoCache
                                 var keyStr = key.ToStringDC();
                                 var typeStr = type.ToStringDC();
 
-                                Brain.RefreshANeuron(keyStr, typeStr);
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.RefreshANeuron(keyStr, typeStr);
+                                }
                             }
                             break;
                         case BrainPackageType.SetNeuronValue:
@@ -318,7 +329,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                Brain.SetNeuronValue(keyStr, pathStr, data);
+
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.SetNeuronValue(keyStr, pathStr, data);
+                                }
                             }
                             break;
                         case BrainPackageType.AddNeuronValue:
@@ -352,7 +367,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                var value = Brain.AddNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    value = Brain.AddNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -391,7 +410,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                var value = Brain.SubtractNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    value = Brain.SubtractNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -430,7 +453,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                var value = Brain.MultiplyNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    value = Brain.MultiplyNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -469,7 +496,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                var value = Brain.DivideNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    value = Brain.DivideNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -508,7 +539,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                var value = Brain.ModuloNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    value = Brain.ModuloNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -558,9 +593,12 @@ namespace dmuka2.CS.NeoCache
                                 var pathStr = path.ToStringDC();
                                 var typeStr = type.ToStringDC();
 
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                Brain.SetNeuronValue(keyStr, pathStr, data);
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    Brain.SetNeuronValue(keyStr, pathStr, data);
+                                }
                             }
                             break;
                         case BrainPackageType.AddNeuronValueWithAdd:
@@ -605,9 +643,13 @@ namespace dmuka2.CS.NeoCache
                                 var pathStr = path.ToStringDC();
                                 var typeStr = type.ToStringDC();
 
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                var value = Brain.AddNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    value = Brain.AddNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -657,9 +699,13 @@ namespace dmuka2.CS.NeoCache
                                 var pathStr = path.ToStringDC();
                                 var typeStr = type.ToStringDC();
 
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                var value = Brain.SubtractNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    value = Brain.SubtractNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -709,9 +755,13 @@ namespace dmuka2.CS.NeoCache
                                 var pathStr = path.ToStringDC();
                                 var typeStr = type.ToStringDC();
 
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                var value = Brain.MultiplyNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    value = Brain.MultiplyNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -761,9 +811,13 @@ namespace dmuka2.CS.NeoCache
                                 var pathStr = path.ToStringDC();
                                 var typeStr = type.ToStringDC();
 
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                var value = Brain.DivideNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    value = Brain.DivideNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -813,9 +867,13 @@ namespace dmuka2.CS.NeoCache
                                 var pathStr = path.ToStringDC();
                                 var typeStr = type.ToStringDC();
 
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                var value = Brain.ModuloNeuronValue(keyStr, pathStr, data);
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    value = Brain.ModuloNeuronValue(keyStr, pathStr, data);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -845,7 +903,12 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                var value = Brain.GetNeuronValue(keyStr, pathStr);
+
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    value = Brain.GetNeuronValue(keyStr, pathStr);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -885,9 +948,14 @@ namespace dmuka2.CS.NeoCache
                                 var keyStr = key.ToStringDC();
                                 var typeStr = type.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                var value = Brain.GetNeuronValue(keyStr, pathStr);
+
+                                byte[] value = null;
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    value = Brain.GetNeuronValue(keyStr, pathStr);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -918,8 +986,12 @@ namespace dmuka2.CS.NeoCache
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
                                 byte[] value = new byte[0];
-                                if (Brain.NeuronExists(keyStr) == true)
-                                    value = Brain.GetNeuronValue(keyStr, pathStr);
+
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == true)
+                                        value = Brain.GetNeuronValue(keyStr, pathStr);
+                                }
 
                                 var valueLen = value.Length.ToByteArrayDC();
                                 response = new byte[valueLen.Length + value.Length + 2];
@@ -959,7 +1031,11 @@ namespace dmuka2.CS.NeoCache
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
                                 var neuronStr = neuron.ToStringDC();
-                                Brain.SetNeuronValueToNeuron(keyStr, pathStr, neuronStr);
+
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.SetNeuronValueToNeuron(keyStr, pathStr, neuronStr);
+                                }
                             }
                             break;
                         case BrainPackageType.SetOrAddNeuronValueToNeuron:
@@ -1004,9 +1080,12 @@ namespace dmuka2.CS.NeoCache
                                 var pathStr = path.ToStringDC();
                                 var neuronStr = neuron.ToStringDC();
 
-                                if (Brain.NeuronExists(keyStr) == false)
-                                    Brain.AddANeuron(keyStr, typeStr);
-                                Brain.SetNeuronValueToNeuron(keyStr, pathStr, neuronStr);
+                                lock (Brain.Neurons)
+                                {
+                                    if (Brain.NeuronExists(keyStr) == false)
+                                        Brain.AddANeuron(keyStr, typeStr);
+                                    Brain.SetNeuronValueToNeuron(keyStr, pathStr, neuronStr);
+                                }
                             }
                             break;
                         case BrainPackageType.AddANeuronToList:
@@ -1031,7 +1110,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                Brain.AddANeuronToList(keyStr, pathStr);
+
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.AddANeuronToList(keyStr, pathStr);
+                                }
                             }
                             break;
                         case BrainPackageType.RemoveANeuronFromList:
@@ -1061,7 +1144,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                Brain.RemoveANeuronFromList(keyStr, pathStr, neuronIndex);
+
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.RemoveANeuronFromList(keyStr, pathStr, neuronIndex);
+                                }
                             }
                             break;
                         case BrainPackageType.ClearNeuronList:
@@ -1086,7 +1173,11 @@ namespace dmuka2.CS.NeoCache
 
                                 var keyStr = key.ToStringDC();
                                 var pathStr = path.ToStringDC();
-                                Brain.ClearNeuronList(keyStr, pathStr);
+
+                                lock (Brain.Neurons)
+                                {
+                                    Brain.ClearNeuronList(keyStr, pathStr);
+                                }
                             }
                             break;
                         case BrainPackageType.NeuronExists:
@@ -1101,7 +1192,13 @@ namespace dmuka2.CS.NeoCache
                                 ReadBuffer(tcpClient, stream, key);
 
                                 var keyStr = key.ToStringDC();
-                                var result = Brain.NeuronExists(keyStr);
+                                var result = false;
+
+                                lock (Brain.Neurons)
+                                {
+                                    result = Brain.NeuronExists(keyStr);
+                                }
+
                                 response = new byte[1 + 2];
                                 response[2] = result == true ? (byte)1 : (byte)0;
                             }
