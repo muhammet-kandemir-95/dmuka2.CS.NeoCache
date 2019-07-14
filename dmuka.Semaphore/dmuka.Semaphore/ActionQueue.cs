@@ -14,7 +14,7 @@ namespace dmuka.Semaphore
             {
                 for (int i = 0; i < this.CoreCount; i++)
                 {
-                    this._threads.Add(new Thread(() =>
+                    var thread = new Thread(() =>
                     {
                         while (this._disposed == false)
                         {
@@ -30,7 +30,8 @@ namespace dmuka.Semaphore
                             { }
 #endif
                         }
-                    }));
+                    }, int.MaxValue);
+                    this._threads.Add(thread);
                 }
             }
         }
@@ -121,10 +122,7 @@ namespace dmuka.Semaphore
                 throw new ObjectDisposedException("ActionQueue");
 
             if (this.CoreCount > 1)
-            {
-                lock (this._actions)
-                    this._actions.Enqueue(action);
-            }
+                this._actions.Enqueue(action);
             else
                 action();
         }

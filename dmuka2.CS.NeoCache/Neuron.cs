@@ -16,49 +16,76 @@ namespace dmuka2.CS.NeoCache
     {
         #region Variables
         /// <summary>
+        /// Neuron type.
+        /// </summary>
+        public static string Stype = "";
+        /// <summary>
+        /// Neuron global ID.
+        /// </summary>
+        [NeuronData]
+        public string key = "";
+        /// <summary>
+        /// Neuron type.
+        /// </summary>
+        [NeuronData]
+        public string type = "";
+        /// <summary>
         /// Get field value as Neural Data.
         /// </summary>
-        public static Dictionary<string, Func<object, byte[]>> GetFieldValue = new Dictionary<string, Func<object, byte[]>>();
+        internal static Dictionary<string, Func<object, byte[]>> GetFieldValue = new Dictionary<string, Func<object, byte[]>>();
         /// <summary>
         /// Set Neural Data to field.
         /// </summary>
-        public static Dictionary<string, Action<object, byte[]>> SetFieldValue = new Dictionary<string, Action<object, byte[]>>();
+        internal static Dictionary<string, Action<object, byte[]>> SetFieldValue = new Dictionary<string, Action<object, byte[]>>();
         /// <summary>
         /// Add value to Neural Data.
         /// </summary>
-        public static Dictionary<string, Func<object, byte[], byte[]>> AddFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
+        internal static Dictionary<string, Func<object, byte[], byte[]>> AddFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
         /// <summary>
         /// Subtract value to Neural Data.
         /// </summary>
-        public static Dictionary<string, Func<object, byte[], byte[]>> SubtractFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
+        internal static Dictionary<string, Func<object, byte[], byte[]>> SubtractFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
         /// <summary>
         /// Multiply value to Neural Data.
         /// </summary>
-        public static Dictionary<string, Func<object, byte[], byte[]>> MultiplyFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
+        internal static Dictionary<string, Func<object, byte[], byte[]>> MultiplyFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
         /// <summary>
         /// Divide value to Neural Data.
         /// </summary>
-        public static Dictionary<string, Func<object, byte[], byte[]>> DivideFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
+        internal static Dictionary<string, Func<object, byte[], byte[]>> DivideFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
         /// <summary>
         /// Modulo value to Neural Data.
         /// </summary>
-        public static Dictionary<string, Func<object, byte[], byte[]>> ModuloFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
+        internal static Dictionary<string, Func<object, byte[], byte[]>> ModuloFieldValue = new Dictionary<string, Func<object, byte[], byte[]>>();
         /// <summary>
         /// Set Neuron to field.
         /// </summary>
-        public static Dictionary<string, Action<object, INeuron>> SetFieldNeuronValue = new Dictionary<string, Action<object, INeuron>>();
+        internal static Dictionary<string, Action<object, INeuron>> SetFieldNeuronValue = new Dictionary<string, Action<object, INeuron>>();
         /// <summary>
         /// Add neuron to list.
         /// </summary>
-        public static Dictionary<string, Action<object>> AddNeuronToList = new Dictionary<string, Action<object>>();
+        internal static Dictionary<string, Action<object>> AddNeuronToList = new Dictionary<string, Action<object>>();
         /// <summary>
         /// Remove neuron from list.
         /// </summary>
-        public static Dictionary<string, Action<object, int>> RemoveNeuronInList = new Dictionary<string, Action<object, int>>();
+        internal static Dictionary<string, Action<object, int>> RemoveNeuronInList = new Dictionary<string, Action<object, int>>();
         /// <summary>
         /// Clear neuron list.
         /// </summary>
-        public static Dictionary<string, Action<object>> ClearList = new Dictionary<string, Action<object>>();
+        internal static Dictionary<string, Action<object>> ClearList = new Dictionary<string, Action<object>>();
+
+        public string Key
+        {
+            get
+            {
+                return key;
+            }
+            set
+            {
+                key = value;
+                this.OnSetKey();
+            }
+        }
 
         Dictionary<string, Func<object, byte[]>> INeuron.GetFieldValue => GetFieldValue;
 
@@ -87,272 +114,310 @@ namespace dmuka2.CS.NeoCache
         static Neuron()
         {
             var type = typeof(T);
-            fillFields(type);
+            Stype = type.Name;
+        }
+
+        public Neuron()
+        {
+            this.type = Stype;
         }
         #endregion
 
         #region Methods
+        /// <summary>
+        /// When keys of this class changed, this method will be called.
+        /// </summary>
+        public virtual void OnSetKey()
+        { }
+
         /// <summary>
         /// We are filling <see cref="GetFieldValue"/> and <see cref="SetFieldValue"/> variable.
         /// </summary>
         /// <param name="type">What is the type?</param>
         /// <param name="parent">What is the parent field name?</param>
         /// <param name="getValue">What is the parent field value?</param>
-        private static void fillFields(Type type, string parent = "", Func<object, object> getValue = null)
+        internal static void FillFields(Type type, string parent = "", Func<object, object> getValue = null, int recursiveLevel = 1)
         {
+            if (recursiveLevel > 1000)
+                return;
+
             getValue = getValue ?? ((v) => v);
-            var fields = type.GetFields().Where(o => o.IsStatic == false).ToArray();
 
-            foreach (var field in fields)
+            Action<string, Type, Func<object, object>, Action<object, object>, Func<Type, object>> fillNeuron = (name, dataType, dataGetValue, dataSetValue, getAttr) =>
             {
-                if (field.FieldType.IsPointer)
-                    continue;
+                if (dataType.IsPointer)
+                    return;
+                if (getAttr(typeof(NeuronDataAttribute)) == null)
+                    return;
 
-                if (field.FieldType == typeof(byte))
+                if (dataType == typeof(byte))
                 {
-                    GetFieldValue.Add(parent + field.Name, (o) => new byte[] { (byte)field.GetValue(getValue(o)) });
-                    SetFieldValue.Add(parent + field.Name, (o, v) => field.SetValue(getValue(o), v[0]));
-                    AddFieldValue.Add(parent + field.Name, (o, v) =>
+                    var pointerMethod = type.GetMethod(name + "__Pointer");
+                    GetFieldValue.Add(parent + name, (o) => new byte[] { (byte)dataGetValue(getValue(o)) });
+                    SetFieldValue.Add(parent + name, (o, v) =>
                     {
-                        byte fieldValue = (byte)field.GetValue(getValue(o));
+                        Action<IntPtr> mp = (pointer) =>
+                        {
+                            Marshal.WriteByte(pointer, 0, v[0]);
+                        };
+                        pointerMethod.Invoke(getValue(o), new object[] { mp, true });
+                    });
+                    AddFieldValue.Add(parent + name, (o, v) =>
+                    {
+                        byte fieldValue = (byte)dataGetValue(getValue(o));
                         fieldValue += v[0];
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
                         return new byte[] { fieldValue };
                     });
-                    SubtractFieldValue.Add(parent + field.Name, (o, v) =>
+                    SubtractFieldValue.Add(parent + name, (o, v) =>
                     {
-                        byte fieldValue = (byte)field.GetValue(getValue(o));
+                        byte fieldValue = (byte)dataGetValue(getValue(o));
                         fieldValue -= v[0];
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
                         return new byte[] { fieldValue };
                     });
-                    MultiplyFieldValue.Add(parent + field.Name, (o, v) =>
+                    MultiplyFieldValue.Add(parent + name, (o, v) =>
                     {
-                        byte fieldValue = (byte)field.GetValue(getValue(o));
+                        byte fieldValue = (byte)dataGetValue(getValue(o));
                         fieldValue *= v[0];
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
                         return new byte[] { fieldValue };
                     });
-                    DivideFieldValue.Add(parent + field.Name, (o, v) =>
+                    DivideFieldValue.Add(parent + name, (o, v) =>
                     {
-                        byte fieldValue = (byte)field.GetValue(getValue(o));
+                        byte fieldValue = (byte)dataGetValue(getValue(o));
                         fieldValue /= v[0];
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
                         return new byte[] { fieldValue };
                     });
-                    ModuloFieldValue.Add(parent + field.Name, (o, v) =>
+                    ModuloFieldValue.Add(parent + name, (o, v) =>
                     {
-                        byte fieldValue = (byte)field.GetValue(getValue(o));
+                        byte fieldValue = (byte)dataGetValue(getValue(o));
                         fieldValue %= v[0];
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
                         return new byte[] { fieldValue };
                     });
                 }
-                else if (field.FieldType == typeof(string))
+                else if (dataType == typeof(string))
                 {
-                    GetFieldValue.Add(parent + field.Name, (o) => Encoding.UTF8.GetBytes((string)field.GetValue(getValue(o))));
-                    SetFieldValue.Add(parent + field.Name, (o, v) => field.SetValue(getValue(o), Encoding.UTF8.GetString(v)));
-                    AddFieldValue.Add(parent + field.Name, (o, v) =>
+                    if (
+                        name == "key" ||
+                        name == "type")
                     {
-                        string fieldValue = (string)field.GetValue(getValue(o));
+                        GetFieldValue.Add(parent + name, (o) => Encoding.UTF8.GetBytes((string)dataGetValue(getValue(o))));
+                        return;
+                    }
+
+                    GetFieldValue.Add(parent + name, (o) => Encoding.UTF8.GetBytes((string)dataGetValue(getValue(o))));
+                    SetFieldValue.Add(parent + name, (o, v) => dataSetValue(getValue(o), Encoding.UTF8.GetString(v)));
+                    AddFieldValue.Add(parent + name, (o, v) =>
+                    {
+                        string fieldValue = (string)dataGetValue(getValue(o));
                         fieldValue += Encoding.UTF8.GetString(v);
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
                         return Encoding.UTF8.GetBytes(fieldValue);
                     });
                 }
-                else if (field.FieldType.IsValueType && field.FieldType.IsEnum == false)
+                else if (dataType.IsValueType && dataType.IsEnum == false)
                 {
-                    var pointerMethod = type.GetMethod(field.Name + "__Pointer");
-                    int size = Marshal.SizeOf(field.FieldType);
-                    GetFieldValue.Add(parent + field.Name, (o) =>
+                    var pointerMethod = type.GetMethod(name + "__Pointer");
+                    int size = Marshal.SizeOf(dataType);
+                    GetFieldValue.Add(parent + name, (o) =>
                     {
                         byte[] result = new byte[size];
                         Action<IntPtr> mp = (pointer) =>
                         {
                             Marshal.Copy(pointer, result, 0, size);
                         };
-                        pointerMethod.Invoke(getValue(o), new object[] { mp });
+                        pointerMethod.Invoke(getValue(o), new object[] { mp, false });
                         return result;
                     });
-                    SetFieldValue.Add(parent + field.Name, (o, v) =>
+                    SetFieldValue.Add(parent + name, (o, v) =>
                     {
                         Action<IntPtr> mp = (pointer) =>
                         {
                             for (int i = 0; i < size; i++)
                                 Marshal.WriteByte(pointer, i, v[i]);
                         };
-                        pointerMethod.Invoke(getValue(o), new object[] { mp });
+                        pointerMethod.Invoke(getValue(o), new object[] { mp , true});
                     });
 
                     Func<dynamic, object> castValue = (o) => null;
                     Func<byte[], dynamic> convertData = (v) => null;
-                    if (field.FieldType == typeof(sbyte))
+                    if (dataType == typeof(sbyte))
                     {
                         castValue = (o) => (sbyte)o;
                         convertData = (v) => v.ToSByteDC();
                     }
-                    else if (field.FieldType == typeof(short))
+                    else if (dataType == typeof(short))
                     {
                         castValue = (o) => (short)o;
                         convertData = (v) => v.ToInt16DC();
                     }
-                    else if (field.FieldType == typeof(ushort))
+                    else if (dataType == typeof(ushort))
                     {
                         castValue = (o) => (ushort)o;
                         convertData = (v) => v.ToUInt16DC();
                     }
-                    else if (field.FieldType == typeof(int))
+                    else if (dataType == typeof(int))
                     {
                         castValue = (o) => (int)o;
                         convertData = (v) => v.ToInt32DC();
                     }
-                    else if (field.FieldType == typeof(uint))
+                    else if (dataType == typeof(uint))
                     {
                         castValue = (o) => (uint)o;
                         convertData = (v) => v.ToUInt32DC();
                     }
-                    else if (field.FieldType == typeof(long))
+                    else if (dataType == typeof(long))
                     {
                         castValue = (o) => (long)o;
                         convertData = (v) => v.ToInt64DC();
                     }
-                    else if (field.FieldType == typeof(ulong))
+                    else if (dataType == typeof(ulong))
                     {
                         castValue = (o) => (ulong)o;
                         convertData = (v) => v.ToUInt64DC();
                     }
-                    else if (field.FieldType == typeof(float))
+                    else if (dataType == typeof(float))
                     {
                         castValue = (o) => (float)o;
                         convertData = (v) => v.ToSingleDC();
                     }
-                    else if (field.FieldType == typeof(double))
+                    else if (dataType == typeof(double))
                     {
                         castValue = (o) => (double)o;
                         convertData = (v) => v.ToDoubleDC();
                     }
-                    else if (field.FieldType == typeof(decimal))
+                    else if (dataType == typeof(decimal))
                     {
                         castValue = (o) => (decimal)o;
                         convertData = (v) => v.ToDecimalDC();
                     }
 
-                    AddFieldValue.Add(parent + field.Name, (o, v) =>
+                    AddFieldValue.Add(parent + name, (o, v) =>
                     {
-                        dynamic fieldValue = castValue(field.GetValue(getValue(o)));
+                        dynamic fieldValue = castValue(dataGetValue(getValue(o)));
                         fieldValue = castValue(fieldValue + convertData(v));
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
 
                         byte[] result = new byte[size];
                         Action<IntPtr> mp = (pointer) =>
                         {
                             Marshal.Copy(pointer, result, 0, size);
                         };
-                        pointerMethod.Invoke(getValue(o), new object[] { mp });
+                        pointerMethod.Invoke(getValue(o), new object[] { mp, false });
                         return result;
                     });
-                    SubtractFieldValue.Add(parent + field.Name, (o, v) =>
+                    SubtractFieldValue.Add(parent + name, (o, v) =>
                     {
-                        dynamic fieldValue = castValue(field.GetValue(getValue(o)));
+                        dynamic fieldValue = castValue(dataGetValue(getValue(o)));
                         fieldValue = castValue(fieldValue - convertData(v));
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
 
                         byte[] result = new byte[size];
                         Action<IntPtr> mp = (pointer) =>
                         {
                             Marshal.Copy(pointer, result, 0, size);
                         };
-                        pointerMethod.Invoke(getValue(o), new object[] { mp });
+                        pointerMethod.Invoke(getValue(o), new object[] { mp, false });
                         return result;
                     });
-                    MultiplyFieldValue.Add(parent + field.Name, (o, v) =>
+                    MultiplyFieldValue.Add(parent + name, (o, v) =>
                     {
-                        dynamic fieldValue = castValue(field.GetValue(getValue(o)));
+                        dynamic fieldValue = castValue(dataGetValue(getValue(o)));
                         fieldValue = castValue(fieldValue * convertData(v));
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
 
                         byte[] result = new byte[size];
                         Action<IntPtr> mp = (pointer) =>
                         {
                             Marshal.Copy(pointer, result, 0, size);
                         };
-                        pointerMethod.Invoke(getValue(o), new object[] { mp });
+                        pointerMethod.Invoke(getValue(o), new object[] { mp, false });
                         return result;
                     });
-                    DivideFieldValue.Add(parent + field.Name, (o, v) =>
+                    DivideFieldValue.Add(parent + name, (o, v) =>
                     {
-                        dynamic fieldValue = castValue(field.GetValue(getValue(o)));
+                        dynamic fieldValue = castValue(dataGetValue(getValue(o)));
                         fieldValue = castValue(fieldValue / convertData(v));
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
 
                         byte[] result = new byte[size];
                         Action<IntPtr> mp = (pointer) =>
                         {
                             Marshal.Copy(pointer, result, 0, size);
                         };
-                        pointerMethod.Invoke(getValue(o), new object[] { mp });
+                        pointerMethod.Invoke(getValue(o), new object[] { mp, false });
                         return result;
                     });
-                    ModuloFieldValue.Add(parent + field.Name, (o, v) =>
+                    ModuloFieldValue.Add(parent + name, (o, v) =>
                     {
-                        dynamic fieldValue = castValue(field.GetValue(getValue(o)));
+                        dynamic fieldValue = castValue(dataGetValue(getValue(o)));
                         fieldValue = castValue(fieldValue % convertData(v));
-                        field.SetValue(getValue(o), fieldValue);
+                        dataSetValue(getValue(o), fieldValue);
 
                         byte[] result = new byte[size];
                         Action<IntPtr> mp = (pointer) =>
                         {
                             Marshal.Copy(pointer, result, 0, size);
                         };
-                        pointerMethod.Invoke(getValue(o), new object[] { mp });
+                        pointerMethod.Invoke(getValue(o), new object[] { mp, false });
                         return result;
                     });
                 }
-                else if (field.FieldType.IsGenericType && field.FieldType.GetGenericTypeDefinition() == typeof(List<>))
+                else if (dataType.GetInterface("IList") != null || dataType.GetInterfaces().Any(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IList<>)))
                 {
-                    var fieldIndexer = field.FieldType.GetProperty("Item");
-                    var genericArgumentType = field.FieldType.GetGenericArguments()[0];
-                    var addMethod = field.FieldType.GetMethod("Add");
-                    var removeMethod = field.FieldType.GetMethod("RemoveAt");
-                    var clearMethod = field.FieldType.GetMethod("Clear");
+                    var fieldIndexer = dataType.GetProperty("Item");
+                    var genericArgumentType =
+                        dataType.GetInterfaces().Any(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IList<>)) ? 
+                            dataType.GetInterfaces().First(o => o.IsGenericType && o.GetGenericTypeDefinition() == typeof(IList<>)).GetGenericArguments()[0] :
+                            dataType.GetGenericArguments()[0];
+                    var addMethod = dataType.GetMethod("Add");
+                    var removeMethod = dataType.GetMethod("RemoveAt");
+                    var clearMethod = dataType.GetMethod("Clear");
+                    var getCount = dataType.GetProperty("Count");
 
-                    int listCount = 0;
-                    AddNeuronToList.Add(parent + field.Name, (o) =>
+                    AddNeuronToList.Add(parent + name, (o) =>
                     {
-                        addMethod.Invoke(field.GetValue(getValue(o)), new object[] { Activator.CreateInstance(genericArgumentType) });
-                        listCount++;
+                        addMethod.Invoke(dataGetValue(getValue(o)), new object[] { Activator.CreateInstance(genericArgumentType) });
                     });
-                    RemoveNeuronInList.Add(parent + field.Name, (o, si) =>
+                    RemoveNeuronInList.Add(parent + name, (o, si) =>
                     {
-                        removeMethod.Invoke(field.GetValue(getValue(o)), new object[] { si });
-                        listCount--;
+                        removeMethod.Invoke(dataGetValue(getValue(o)), new object[] { si });
                     });
-                    ClearList.Add(parent + field.Name, (o) =>
+                    ClearList.Add(parent + name, (o) =>
                     {
-                        clearMethod.Invoke(field.GetValue(getValue(o)), new object[0]);
-                        listCount = 0;
+                        clearMethod.Invoke(dataGetValue(getValue(o)), new object[0]);
                     });
-                    GetFieldValue.Add(parent + field.Name + ".{len}", (o) => BitConverter.GetBytes(listCount));
+                    GetFieldValue.Add(parent + name + ".{len}", (o) => BitConverter.GetBytes((int)getCount.GetValue(dataGetValue(getValue(o)))));
 
-                    NeuronListAttribute attr = field.GetCustomAttribute<NeuronListAttribute>();
+                    NeuronListAttribute attr = (NeuronListAttribute)getAttr(typeof(NeuronListAttribute));
                     for (int i = 0; i < attr.MaxRowCount; i++)
                     {
                         Action<int> action = (ri) =>
                         {
-                            fillFields(genericArgumentType, parent + field.Name + "[" + ri + "]" + ".", (o) => fieldIndexer.GetValue(field.GetValue(getValue(o)), new object[] { ri }));
-                            SetFieldNeuronValue.Add(parent + field.Name + "[" + ri + "]", (o, n) => fieldIndexer.SetValue(field.GetValue(getValue(o)), n, new object[] { ri }));
+                            FillFields(genericArgumentType, parent + name + "[" + ri + "]" + ".", (o) => fieldIndexer.GetValue(dataGetValue(getValue(o)), new object[] { ri }), recursiveLevel + 1);
+                            SetFieldNeuronValue.Add(parent + name + "[" + ri + "]", (o, n) => fieldIndexer.SetValue(dataGetValue(getValue(o)), n, new object[] { ri }));
                         };
                         action(i);
                     }
                 }
-                else if (field.FieldType.BaseType == typeof(Neuron<>).MakeGenericType(field.FieldType))
+                else if (dataType.BaseType == typeof(Neuron<>).MakeGenericType(dataType))
                 {
-                    fillFields(field.FieldType, parent + field.Name + ".", (o) => field.GetValue(getValue(o)));
+                    FillFields(dataType, parent + name + ".", (o) => dataGetValue(getValue(o)), recursiveLevel + 1);
 
-                    string[] allFieldsOfField = field.FieldType.GetFields().Where(o => o.IsStatic == false).Select(o => o.Name).ToArray();
-                    SetFieldNeuronValue.Add(parent + field.Name, (o, n) => field.SetValue(getValue(o), n));
+                    SetFieldNeuronValue.Add(parent + name, (o, n) => dataSetValue(getValue(o), n));
                 }
-            }
+            };
+
+            var fields = type.GetFields();
+            foreach (var field in fields)
+                fillNeuron(field.Name, field.FieldType, (o) => field.GetValue(o), (o, v) => field.SetValue(o, v), (t) => field.GetCustomAttribute(t));
+
+            var props = type.GetProperties();
+            foreach (var prop in props)
+                fillNeuron(prop.Name, prop.PropertyType, (o) => prop.GetValue(o), (o, v) => prop.SetValue(o, v), (t) => prop.GetCustomAttribute(t));
         }
         #endregion
     }

@@ -7,8 +7,12 @@ namespace dmuka2.CS.NeoCache
     /// <summary>
     /// This is only for store neurons on the brain.
     /// </summary>
-    public interface INeuron
+    internal interface INeuron
     {
+        /// <summary>
+        /// Neuron global ID
+        /// </summary>
+        string Key { get; set; }
         /// <summary>
         /// Get field value as Neural Data.
         /// </summary>

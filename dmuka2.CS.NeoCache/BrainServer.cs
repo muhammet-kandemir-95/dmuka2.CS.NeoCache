@@ -51,6 +51,14 @@ namespace dmuka2.CS.NeoCache
         int readTimeout = 0;
         int coreCount = 0;
         ActionQueue actionQueue = null;
+
+        public bool Enable
+        {
+            get
+            {
+                return this.enable;
+            }
+        }
         #endregion
 
         #region Constructors
@@ -115,7 +123,6 @@ namespace dmuka2.CS.NeoCache
         /// <param name="certificate"></param>
         public void OpenWithSSL(X509Certificate certificate)
         {
-            this.enable = true;
             this.actionQueue = new ActionQueue(coreCount);
             this.actionQueue.Start();
 
@@ -131,6 +138,7 @@ namespace dmuka2.CS.NeoCache
             }
 
             this.tcpListener.Start();
+            this.enable = true;
 #if DEBUG
             Console.WriteLine("Server opened...");
 #endif
@@ -1241,7 +1249,7 @@ namespace dmuka2.CS.NeoCache
                 { }
 
                 Console.WriteLine(
-                    "**********************" +
+                    "**********************" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") +
                     Environment.NewLine +
                     ex.ToString() +
                     Environment.NewLine +

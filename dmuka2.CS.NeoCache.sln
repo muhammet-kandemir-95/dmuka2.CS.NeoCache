@@ -11,6 +11,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dmuka.Semaphore", "dmuka.Se
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dmuka.Semaphore.TestsConsoleApp", "dmuka.Semaphore\dmuka.Semaphore.TestsConsoleApp\dmuka.Semaphore.TestsConsoleApp.csproj", "{DB8707F0-C157-4DF0-8F1B-A2D099CAC096}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dmuka2.CS.NeoCache.TestApp.Server", "dmuka2.CS.NeoCache.TestApp.Server\dmuka2.CS.NeoCache.TestApp.Server.csproj", "{EA57A664-B1BF-472F-92C8-04526FDD16F1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dmuka2.CS.NeoCache.TestApp.Server.Model", "dmuka2.CS.NeoCache.TestApp.Server.Model\dmuka2.CS.NeoCache.TestApp.Server.Model.csproj", "{6C13A350-DC22-4699-BC94-A324AEDAA313}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "dmuka2.CS.NeoCache.TestApp.Admin", "dmuka2.CS.NeoCache.TestApp.Admin\dmuka2.CS.NeoCache.TestApp.Admin.csproj", "{EBA93607-2124-4D30-B63A-1EC6E47C2521}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +39,18 @@ Global
 		{DB8707F0-C157-4DF0-8F1B-A2D099CAC096}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DB8707F0-C157-4DF0-8F1B-A2D099CAC096}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DB8707F0-C157-4DF0-8F1B-A2D099CAC096}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA57A664-B1BF-472F-92C8-04526FDD16F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA57A664-B1BF-472F-92C8-04526FDD16F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA57A664-B1BF-472F-92C8-04526FDD16F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA57A664-B1BF-472F-92C8-04526FDD16F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C13A350-DC22-4699-BC94-A324AEDAA313}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C13A350-DC22-4699-BC94-A324AEDAA313}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C13A350-DC22-4699-BC94-A324AEDAA313}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C13A350-DC22-4699-BC94-A324AEDAA313}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBA93607-2124-4D30-B63A-1EC6E47C2521}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBA93607-2124-4D30-B63A-1EC6E47C2521}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBA93607-2124-4D30-B63A-1EC6E47C2521}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBA93607-2124-4D30-B63A-1EC6E47C2521}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,235 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="form">
+    <div class="row">
+        <div class="col">
+            Host :
+        </div>
+        <div class="col">
+            <input id="host" type="text" value="localhost" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            Port :
+        </div>
+        <div class="col">
+            <input id="port" type="number" value="1234" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            Password :
+        </div>
+        <div class="col">
+            <input id="pass" type="password" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            Class Id :
+        </div>
+        <div class="col">
+            <input id="classid" type="text" value="A-1" />
+        </div>
+    </div>
+    <div class="row">
+        <div class="col.single">
+            <input id="connect" type="button" value="Connect" />
+        </div>
+    </div>
+</div>
+
+<div id="canvas-parent">
+</div>
+
+@section Scripts {
+    <script>
+        var $host = $("#host");
+        var $port = $("#port");
+        var $pass = $("#pass");
+        var $classid = $("#classid");
+        var $connect = $("#connect");
+
+        $connect.click(function () {
+            var host = $host.val().trim();
+            if (host === '') {
+                alert('Please fill the Host!');
+                return;
+            }
+
+            var port = $port.val().trim();
+            if (port === '') {
+                alert('Please fill the Port!');
+                return;
+            } else if (parseInt(port).toString() === 'NaN') {
+                alert('Port is not a number!');
+                return;
+            }
+
+            var pass = $pass.val().trim();
+
+            var classid = $classid.val().trim();
+            if (classid === '') {
+                alert('Please fill the Class ID!');
+                return;
+            }
+
+            $.ajax({
+                url: '/Home/GetJson',
+                type: 'post',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                data: JSON.stringify({
+                    Host: host,
+                    Port: parseInt(port),
+                    Password: pass,
+                    ClassId: classid
+                }),
+                success: function (links) {
+                    $("#canvas-parent").html("");
+                    $("#canvas-parent").append("<svg width=\"" + window.innerWidth + "\" height=\"" + (window.innerHeight - 200) + "\"></svg>");
+                    var svg = d3.select("svg"),
+                        width = +svg.attr("width"),
+                        height = +svg.attr("height");
+
+                    var strength = {
+                        "Teacher": {
+                            d: 200,
+                            s: 2
+                        },
+                        "Student": {
+                            d: 300,
+                            s: 3
+                        },
+                        "Exam": {
+                            d: 100,
+                            s: 1
+                        }
+                    };
+
+                    var simulation = d3.forceSimulation()
+                        .force("link", d3.forceLink().distance(function (d) { return strength[d.target.name.split('-')[0]].d; }).strength(function (d) { return strength[d.target.name.split('-')[0]].s; }).id(function (d) { return d.name; }))
+                        .force("charge", d3.forceManyBody())
+                        .force("center", d3.forceCenter(width / 2, height / 2));
+
+                    var nodesObj = {};
+
+                    // Compute the distinct nodesObj from the links.
+                    links.forEach(function (link) {
+                        link.source = (nodesObj[link.source] || (nodesObj[link.source] = { name: link.source })).name;
+                        link.target = (nodesObj[link.target] || (nodesObj[link.target] = { name: link.target })).name;
+                    });
+                    var nodes = [];
+                    for (var key in nodesObj) {
+                        nodes.push({ name: nodesObj[key].name });
+                    }
+                    var link = svg.append("g")
+                        .attr("class", "links")
+                        .selectAll("line")
+                        .data(links)
+                        .enter().append("line");
+
+                    var node = svg.append("g")
+                        .attr("class", "nodes")
+                        .selectAll("g")
+                        .data(nodes)
+                        .enter().append("g")
+
+                    var circles = node.append("circle")
+                        .attr("r", 20)
+                        .attr("class", function (d) { return d.name.split('-')[0]; })
+                        .call(d3.drag()
+                            .on("start", dragstarted)
+                            .on("drag", dragged)
+                            .on("end", dragended));
+
+                    var lables = node.append("text")
+                        .text(function (d) {
+                            return d.name;
+                        })
+                        .attr('x', 6)
+                        .attr('y', 3);
+
+                    node.append("title")
+                        .text(function (d) { return d.name; });
+
+                    simulation
+                        .nodes(nodes)
+                        .on("tick", ticked);
+
+                    simulation.force("link")
+                        .links(links);
+
+                    function ticked() {
+                        link
+                            .attr("class", function (d) { return "link " + d.target.name.split('-')[0]; })
+                            .attr("x1", function (d) { return d.source.x; })
+                            .attr("y1", function (d) { return d.source.y; })
+                            .attr("x2", function (d) { return d.target.x; })
+                            .attr("y2", function (d) { return d.target.y; });
+
+                        node
+                            .attr("transform", function (d) {
+                                return "translate(" + d.x + "," + d.y + ")";
+                            })
+                    }
+
+                    function dragstarted(d) {
+                        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+                        d.fx = d.x;
+                        d.fy = d.y;
+                    }
+
+                    function dragged(d) {
+                        d.fx = d3.event.x;
+                        d.fy = d3.event.y;
+                    }
+
+                    function dragended(d) {
+                        if (!d3.event.active) simulation.alphaTarget(0);
+                        d.fx = null;
+                        d.fy = null;
+                    }
+                },
+                error: function () {
+                    alert('XHR error!');
+                }
+            });
+        });
+
+                    //var links = [
+                    //    { source: "Microsoft", target: "Amazon" },
+                    //    { source: "Microsoft", target: "HTC" },
+                    //    { source: "Samsung", target: "Apple" },
+                    //    { source: "Motorola", target: "Apple" },
+                    //    { source: "Nokia", target: "Apple" },
+                    //    { source: "HTC", target: "Apple" },
+                    //    { source: "Kodak", target: "Apple" },
+                    //    { source: "Microsoft", target: "Barnes & Noble" },
+                    //    { source: "Microsoft", target: "Foxconn" },
+                    //    { source: "Oracle", target: "Google" },
+                    //    { source: "Apple", target: "HTC" },
+                    //    { source: "ZTE", target: "Apple" },
+                    //    { source: "Microsoft", target: "Inventec" },
+                    //    { source: "Samsung", target: "Kodak" },
+                    //    { source: "LG", target: "Kodak" },
+                    //    { source: "RIM", target: "Kodak" },
+                    //    { source: "Sony", target: "LG" },
+                    //    { source: "Kodak", target: "LG" },
+                    //    { source: "Apple", target: "Nokia" },
+                    //    { source: "Qualcomm", target: "Nokia" },
+                    //    { source: "Apple", target: "Motorola" },
+                    //    { source: "Microsoft", target: "Motorola" },
+                    //    { source: "Motorola", target: "Microsoft" },
+                    //    { source: "Huawei", target: "ZTE" },
+                    //    { source: "Ericsson", target: "ZTE" },
+                    //    { source: "Kodak", target: "Samsung" },
+                    //    { source: "Apple", target: "Samsung" },
+                    //    { source: "Kodak", target: "RIM" },
+                    //    { source: "Nokia", target: "Qualcomm" }
+                    //];
+    </script>
+}

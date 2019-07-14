@@ -151,11 +151,20 @@ namespace Tests
             BrainClient client = new BrainClient();
             client.Open("localhost", 1003, "p@ss");
 
+            Assert.AreEqual(client.GetNeuronValueAsInt32("global", "key_count"), 1);
+            Assert.AreEqual(client.GetNeuronValueAsString("global", "keys"), "global");
+            Assert.AreEqual(client.GetNeuronValueAsInt32("global", "type_count"), 4);
+
             var nt1_1 = "nt1_1";
             Assert.IsFalse(client.NeuronExists(nt1_1));
             client.AddANeuron(nt1_1, nameof(NeuronTestModel1));
             client.AddANeuronToList(nt1_1, nameof(NeuronTestModel1.test2datas));
             Assert.IsTrue(client.NeuronExists(nt1_1));
+            Assert.AreEqual(client.GetNeuronValueAsString(nt1_1, "key"), nt1_1);
+
+            Assert.AreEqual(client.GetNeuronValueAsInt32("global", "key_count"), 2);
+            Assert.AreEqual(client.GetNeuronValueAsString("global", "keys"), "global~nt1_1");
+            Assert.AreEqual(client.GetNeuronValueAsInt32("global", "type_count"), 4);
 
             client.SetNeuronValue(nt1_1, nameof(NeuronTestModel1.stringValue), "abc");
             Assert.AreEqual(client.GetNeuronValueAsString(nt1_1, nameof(NeuronTestModel1.stringValue)), "abc");
@@ -220,7 +229,12 @@ namespace Tests
             client.AddANeuron(nt2_1, nameof(NeuronTestModel2));
             client.SetNeuronValue(nt2_1, $"{nameof(NeuronTestModel2.stringValue)}", "159283");
 
+            Assert.AreEqual(client.GetNeuronValueAsInt32("global", "key_count"), 3);
+            Assert.AreEqual(client.GetNeuronValueAsString("global", "keys"), "global~nt1_1~nt2_1");
+            Assert.AreEqual(client.GetNeuronValueAsInt32("global", "type_count"), 4);
+
             client.SetNeuronValueToNeuron(nt1_1, $"{nameof(NeuronTestModel1.test2datas)}[1]", nt2_1);
+            Assert.AreEqual(client.GetNeuronValueAsString(nt1_1, $"{nameof(NeuronTestModel1.test2datas)}[1].key"), nt2_1);
             Assert.AreEqual(client.GetNeuronValueAsString(nt1_1, $"{nameof(NeuronTestModel1.test2datas)}[1].{nameof(NeuronTestModel2.stringValue)}"), "159283");
             client.SetNeuronValue(nt2_1, $"{nameof(NeuronTestModel2.stringValue)}", "+++---55");
             Assert.AreEqual(client.GetNeuronValueAsString(nt1_1, $"{nameof(NeuronTestModel1.test2datas)}[1].{nameof(NeuronTestModel2.stringValue)}"), "+++---55");
@@ -285,10 +299,23 @@ namespace Tests
 
         public class NeuronTestModel3 : dmuka2.CS.NeoCache.Neuron<NeuronTestModel3>
         {
+            [NeuronData]
             public string stringValue = "";
+            [NeuronData]
             public byte byteValue = 13;
+            public void byteValue__Pointer(Action<IntPtr> callback, bool set)
+            {
+                unsafe
+                {
+                    fixed (byte* address = &byteValue)
+                    {
+                        callback((IntPtr)address);
+                    }
+                }
+            }
+            [NeuronData]
             public sbyte sbyteValue = 13;
-            public void sbyteValue__Pointer(Action<IntPtr> callback)
+            public void sbyteValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -298,8 +325,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public short shortValue = 13;
-            public void shortValue__Pointer(Action<IntPtr> callback)
+            public void shortValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -309,8 +337,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public ushort ushortValue = 13;
-            public void ushortValue__Pointer(Action<IntPtr> callback)
+            public void ushortValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -320,8 +349,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public int intValue = 13;
-            public void intValue__Pointer(Action<IntPtr> callback)
+            public void intValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -331,8 +361,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public uint uintValue = 13;
-            public void uintValue__Pointer(Action<IntPtr> callback)
+            public void uintValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -342,8 +373,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public long longValue = 13;
-            public void longValue__Pointer(Action<IntPtr> callback)
+            public void longValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -353,8 +385,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public ulong ulongValue = 13;
-            public void ulongValue__Pointer(Action<IntPtr> callback)
+            public void ulongValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -364,8 +397,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public float floatValue = 13;
-            public void floatValue__Pointer(Action<IntPtr> callback)
+            public void floatValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -375,8 +409,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public double doubleValue = 13;
-            public void doubleValue__Pointer(Action<IntPtr> callback)
+            public void doubleValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -386,8 +421,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public decimal decimalValue = 13;
-            public void decimalValue__Pointer(Action<IntPtr> callback)
+            public void decimalValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -401,10 +437,23 @@ namespace Tests
 
         public class NeuronTestModel2 : dmuka2.CS.NeoCache.Neuron<NeuronTestModel2>
         {
+            [NeuronData]
             public string stringValue = "";
+            [NeuronData]
             public byte byteValue = byte.MinValue;
+            public void byteValue__Pointer(Action<IntPtr> callback, bool set)
+            {
+                unsafe
+                {
+                    fixed (byte* address = &byteValue)
+                    {
+                        callback((IntPtr)address);
+                    }
+                }
+            }
+            [NeuronData]
             public sbyte sbyteValue = sbyte.MinValue;
-            public void sbyteValue__Pointer(Action<IntPtr> callback)
+            public void sbyteValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -414,8 +463,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public short shortValue = short.MinValue;
-            public void shortValue__Pointer(Action<IntPtr> callback)
+            public void shortValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -425,8 +475,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public ushort ushortValue = ushort.MinValue;
-            public void ushortValue__Pointer(Action<IntPtr> callback)
+            public void ushortValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -436,8 +487,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public int intValue = int.MinValue;
-            public void intValue__Pointer(Action<IntPtr> callback)
+            public void intValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -447,8 +499,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public uint uintValue = uint.MinValue;
-            public void uintValue__Pointer(Action<IntPtr> callback)
+            public void uintValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -458,8 +511,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public long longValue = long.MinValue;
-            public void longValue__Pointer(Action<IntPtr> callback)
+            public void longValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -469,8 +523,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public ulong ulongValue = ulong.MinValue;
-            public void ulongValue__Pointer(Action<IntPtr> callback)
+            public void ulongValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -480,8 +535,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public float floatValue = float.MinValue;
-            public void floatValue__Pointer(Action<IntPtr> callback)
+            public void floatValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -491,8 +547,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public double doubleValue = double.MinValue;
-            public void doubleValue__Pointer(Action<IntPtr> callback)
+            public void doubleValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -502,8 +559,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public decimal decimalValue = decimal.MinValue;
-            public void decimalValue__Pointer(Action<IntPtr> callback)
+            public void decimalValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -514,16 +572,35 @@ namespace Tests
                 }
             }
 
+            [NeuronData]
             [NeuronList(MaxRowCount = 100)]
             public List<NeuronTestModel3> test3datas = new List<NeuronTestModel3>();
         }
 
         public class NeuronTestModel1 : dmuka2.CS.NeoCache.Neuron<NeuronTestModel1>
         {
+            public NeuronTestModel1()
+            {
+                model3 = new NeuronTestModel3();
+            }
+
+            [NeuronData]
             public string stringValue = "";
+            [NeuronData]
             public byte byteValue = byte.MinValue;
+            public void byteValue__Pointer(Action<IntPtr> callback, bool set)
+            {
+                unsafe
+                {
+                    fixed (byte* address = &byteValue)
+                    {
+                        callback((IntPtr)address);
+                    }
+                }
+            }
+            [NeuronData]
             public sbyte sbyteValue = sbyte.MinValue;
-            public void sbyteValue__Pointer(Action<IntPtr> callback)
+            public void sbyteValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -533,8 +610,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public short shortValue = short.MinValue;
-            public void shortValue__Pointer(Action<IntPtr> callback)
+            public void shortValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -544,8 +622,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public ushort ushortValue = ushort.MinValue;
-            public void ushortValue__Pointer(Action<IntPtr> callback)
+            public void ushortValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -555,8 +634,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public int intValue = int.MinValue;
-            public void intValue__Pointer(Action<IntPtr> callback)
+            public void intValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -566,8 +646,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public uint uintValue = uint.MinValue;
-            public void uintValue__Pointer(Action<IntPtr> callback)
+            public void uintValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -577,8 +658,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public long longValue = long.MinValue;
-            public void longValue__Pointer(Action<IntPtr> callback)
+            public void longValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -588,8 +670,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public ulong ulongValue = ulong.MinValue;
-            public void ulongValue__Pointer(Action<IntPtr> callback)
+            public void ulongValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -599,8 +682,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public float floatValue = float.MinValue;
-            public void floatValue__Pointer(Action<IntPtr> callback)
+            public void floatValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -610,8 +694,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public double doubleValue = double.MinValue;
-            public void doubleValue__Pointer(Action<IntPtr> callback)
+            public void doubleValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -621,8 +706,9 @@ namespace Tests
                     }
                 }
             }
+            [NeuronData]
             public decimal decimalValue = decimal.MinValue;
-            public void decimalValue__Pointer(Action<IntPtr> callback)
+            public void decimalValue__Pointer(Action<IntPtr> callback, bool set)
             {
                 unsafe
                 {
@@ -633,10 +719,11 @@ namespace Tests
                 }
             }
 
+            [NeuronData]
             [NeuronList(MaxRowCount = 100)]
             public List<NeuronTestModel2> test2datas = new List<NeuronTestModel2>();
-
-            public NeuronTestModel3 model3 = new NeuronTestModel3();
+            [NeuronData]
+            public NeuronTestModel3 model3 = null;
         }
     }
 }

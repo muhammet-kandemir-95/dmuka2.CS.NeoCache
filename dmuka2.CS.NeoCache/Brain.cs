@@ -15,11 +15,11 @@ namespace dmuka2.CS.NeoCache
         /// <summary>
         /// Static neuron types.
         /// </summary>
-        public static Dictionary<string, Type> NeuronTypes = new Dictionary<string, Type>();
+        internal static Dictionary<string, Type> NeuronTypes = new Dictionary<string, Type>();
         /// <summary>
         /// All datas.
         /// </summary>
-        public static Dictionary<string, INeuron> Neurons = new Dictionary<string, INeuron>();
+        internal static Dictionary<string, INeuron> Neurons = new Dictionary<string, INeuron>();
         #endregion
 
         #region Constructors
@@ -40,10 +40,13 @@ namespace dmuka2.CS.NeoCache
                     }
                 }).ToArray();
                 foreach (var neuronType in allNeurons)
+                {
+                    neuronType.BaseType.GetMethod("FillFields", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy).Invoke(null, new object[] { neuronType, "", null, 1 });
                     NeuronTypes.Add(neuronType.Name, neuronType);
+                }
             }
 
-            Neurons.Add("StartupNeuron", new StartupNeuron());
+            Neurons.Add("global", new Global());
         }
         #endregion
 
@@ -56,6 +59,7 @@ namespace dmuka2.CS.NeoCache
         public static void AddANeuron(string key, string type)
         {
             INeuron neuron = (INeuron)Activator.CreateInstance(NeuronTypes[type]);
+            neuron.Key = key;
             Neurons.Add(key, neuron);
         }
 
@@ -65,6 +69,7 @@ namespace dmuka2.CS.NeoCache
         /// <param name="key">Data ID.</param>
         public static void RemoveANeuron(string key)
         {
+            Neurons[key].Key = "";
             Neurons.Remove(key);
         }
 

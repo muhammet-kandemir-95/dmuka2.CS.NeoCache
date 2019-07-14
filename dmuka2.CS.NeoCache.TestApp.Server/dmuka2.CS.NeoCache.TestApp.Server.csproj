@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\dmuka2.CS.NeoCache.TestApp.Server.Model\dmuka2.CS.NeoCache.TestApp.Server.Model.csproj" />
+    <ProjectReference Include="..\dmuka2.CS.NeoCache\dmuka2.CS.NeoCache.csproj" />
+  </ItemGroup>
+
+</Project>

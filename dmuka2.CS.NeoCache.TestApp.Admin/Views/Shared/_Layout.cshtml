@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - dmuka2.CS.NeoCache.TestApp.Admin</title>
+
+    <style>
+        .link {
+            fill: none;
+            stroke: #666;
+            stroke-width: 3px;
+        }
+
+            .link.Class {
+                stroke: #e8e45d;
+            }
+
+            .link.Teacher {
+                stroke: #6ef48a;
+            }
+
+            .link.Student {
+                stroke: #389aff;
+            }
+
+            .link.Exam {
+                stroke: #ff648d;
+            }
+
+        circle {
+            fill: #ccc;
+            stroke: #333;
+            stroke-width: 1.5px;
+        }
+
+            circle.Class {
+                fill: #e8e45d;
+            }
+
+            circle.Teacher {
+                fill: #6ef48a;
+            }
+
+            circle.Student {
+                fill: #389aff;
+            }
+
+            circle.Exam {
+                fill: #ff648d;
+            }
+
+        text {
+            font: 15px sans-serif;
+            pointer-events: none;
+            text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
+        }
+
+        html,
+        body {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        .form {
+            margin-left: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #8b8b8b;
+            margin-right: 20px;
+            border-radius: 4px;
+            background-color: #fdfdfd;
+        }
+
+        body {
+            background-color: #cbcbcb;
+            font-family: arial;
+            font-size: 12px;
+        }
+
+        div#canvas-parent {
+            background-color: white;
+            margin-top: 20px;
+            border-top: 4px solid #858585;
+            border-bottom: 4px solid #858585;
+        }
+
+        .row {
+            display: inline-block;
+            border: 1px solid #e6e6e6;
+            padding: 20px;
+        }
+
+            .row.full {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+        .col {
+            display: inline-block;
+        }
+
+            .col:first-child:not(.single) {
+                margin-right: 10px;
+            }
+    </style>
+</head>
+<body>
+    @RenderBody()
+
+    <script src="~/js/d3js.js"></script>
+    <script src="~/js/jquery.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
